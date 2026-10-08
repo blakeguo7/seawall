@@ -286,6 +286,19 @@ _CLAUDE_ALIAS_TARGETS: dict[str, str] = {
     "opus[1m]": "claude-opus-4-6[1m]",
 }
 
+_CLAUDE_TIERS = frozenset({"best", "opusplan", *_CLAUDE_ALIAS_TARGETS})
+
+
+def _serves_claude(model: str | None) -> bool:
+    """Whether a profile whose own model is ``model`` serves Claude models.
+
+    Claude's tier names (sonnet, opus, haiku, best, opusplan) only mean something there. An empty
+    model, ``default`` and the tier names themselves count as Claude, which is what profiles had
+    before this check existed.
+    """
+    name = (model or "").strip().lower().split("/")[-1]
+    return name in ("", "default") or name.startswith("claude") or name in _CLAUDE_TIERS
+
 
 def normalize_anthropic_model_name(model: str) -> str:
     """Normalize an Anthropic model name the same way Hermes does.
@@ -386,6 +399,11 @@ def resolve_model_setting(
         return "gpt-5.4"
 
     if is_claude_family_provider(provider):
+        if normalized in _CLAUDE_TIERS and not _serves_claude(default_model):
+            # The profile serves other models: DeepSeek or a gateway behind an Anthropic-compatible
+            # endpoint. A Claude name sent there is not refused; the endpoint quietly answers with a
+            # model of its own, and the cost is estimated at Claude's prices. Use the profile's model.
+            return (default_model or "").strip()
         if normalized == "best":
             return _CLAUDE_ALIAS_TARGETS["opus"]
         if normalized == "opusplan":
