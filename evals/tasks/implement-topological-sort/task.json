@@ -1,0 +1,28 @@
+{
+  "id": "implement-topological-sort",
+  "title": "Implement a topological sort with cycle detection",
+  "prompt": "graph.py has a stub toposort(graph) and a CycleError class. Implement toposort as its docstring describes. tests/test_graph.py has a basic example.",
+  "tags": [
+    "feature",
+    "python",
+    "algorithms"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_graph.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

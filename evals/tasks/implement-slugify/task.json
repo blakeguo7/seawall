@@ -1,0 +1,28 @@
+{
+  "id": "implement-slugify",
+  "title": "Implement slugify",
+  "prompt": "textutil.py contains a stub for slugify(text, max_length=None). Implement it exactly as its docstring describes. tests/test_textutil.py shows a few examples; handle the cases the docstring mentions as well.",
+  "tags": [
+    "feature",
+    "python",
+    "strings"
+  ],
+  "difficulty": "easy",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_textutil.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

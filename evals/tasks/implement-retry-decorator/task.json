@@ -1,0 +1,28 @@
+{
+  "id": "implement-retry-decorator",
+  "title": "Implement a retry decorator",
+  "prompt": "retry.py has a stub for the retry decorator. Implement it as the docstring describes. tests/test_retry.py has a basic test.",
+  "tags": [
+    "feature",
+    "python",
+    "decorators"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_retry.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

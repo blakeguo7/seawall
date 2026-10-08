@@ -1,0 +1,27 @@
+{
+  "id": "fix-pagination-off-by-one",
+  "title": "Pagination returns the wrong page",
+  "prompt": "The pagination helpers in pager.py give wrong results: paginate([1, 2, 3, 4, 5], 1, 2) should return [1, 2] but does not, and page_count must round up. Fix pager.py so that the tests in tests/ pass and the behaviour described in the docstrings holds.",
+  "tags": [
+    "bugfix",
+    "python"
+  ],
+  "difficulty": "easy",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_pager.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

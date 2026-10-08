@@ -1,0 +1,27 @@
+{
+  "id": "fix-shared-mutable-default",
+  "title": "Objects share state through a default argument",
+  "prompt": "Two Group objects created without members end up sharing the same member list, and collect() remembers values between calls. Fix groups.py so that every call and every instance gets its own list. The tests in tests/ should pass.",
+  "tags": [
+    "bugfix",
+    "python"
+  ],
+  "difficulty": "easy",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_groups.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

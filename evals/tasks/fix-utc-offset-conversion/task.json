@@ -1,0 +1,28 @@
+{
+  "id": "fix-utc-offset-conversion",
+  "title": "Time zone conversion ignores minutes and naive datetimes",
+  "prompt": "clock.py converts UTC timestamps to a local time given an offset in hours. It drops fractional offsets like 5.5 (India), returns naive datetimes, and silently accepts naive input. Fix clock.py as its docstrings describe; tests/test_clock.py shows a failing case.",
+  "tags": [
+    "bugfix",
+    "python",
+    "dates"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_clock.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

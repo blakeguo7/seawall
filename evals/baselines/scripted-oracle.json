@@ -1,0 +1,793 @@
+{
+  "schema": 1,
+  "suite": "coding",
+  "created": "",
+  "harness_version": "0.1.9",
+  "git_commit": "",
+  "agent": {
+    "kind": "oracle",
+    "model": "scripted-model",
+    "permission_mode": null,
+    "max_budget_usd": null,
+    "max_total_tokens": null
+  },
+  "trials_per_task": 1,
+  "tasks": {
+    "add-cli-options": {
+      "title": "Add options to a command-line tool",
+      "tags": [
+        "feature",
+        "python",
+        "cli"
+      ],
+      "trials": [
+        {
+          "task_id": "add-cli-options",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6834,
+            "output_tokens": 794,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.032412,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 2,
+          "tampered_files": [],
+          "tool_calls_allowed": 3,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-binary-search": {
+      "title": "Binary search misses elements",
+      "tags": [
+        "bugfix",
+        "python",
+        "algorithms"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-binary-search",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5794,
+            "output_tokens": 346,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.022572,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-circular-import": {
+      "title": "Two modules import each other",
+      "tags": [
+        "bugfix",
+        "python",
+        "multi-file"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-circular-import",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5577,
+            "output_tokens": 219,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.020016,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-config-merge": {
+      "title": "Config loader mutates its defaults and merges shallowly",
+      "tags": [
+        "bugfix",
+        "python",
+        "config"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-config-merge",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6215,
+            "output_tokens": 514,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.026355,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-csv-quoted-fields": {
+      "title": "CSV parser breaks on quoted fields",
+      "tags": [
+        "bugfix",
+        "python",
+        "parsing"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-csv-quoted-fields",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6261,
+            "output_tokens": 565,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.027258,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-money-rounding": {
+      "title": "Receipt totals are off by a cent",
+      "tags": [
+        "bugfix",
+        "python",
+        "multi-file",
+        "numerics"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-money-rounding",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6252,
+            "output_tokens": 483,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.026001,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 2,
+          "tampered_files": [],
+          "tool_calls_allowed": 3,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-pagination-off-by-one": {
+      "title": "Pagination returns the wrong page",
+      "tags": [
+        "bugfix",
+        "python"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-pagination-off-by-one",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5663,
+            "output_tokens": 260,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.020889,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-shared-mutable-default": {
+      "title": "Objects share state through a default argument",
+      "tags": [
+        "bugfix",
+        "python"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-shared-mutable-default",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5673,
+            "output_tokens": 271,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.021084,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-sql-injection": {
+      "title": "User lookup breaks on apostrophes and allows SQL injection",
+      "tags": [
+        "bugfix",
+        "python",
+        "security",
+        "sqlite"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-sql-injection",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5981,
+            "output_tokens": 424,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.024303,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-statistics-edge-cases": {
+      "title": "Statistics helpers crash or miscalculate on edge cases",
+      "tags": [
+        "bugfix",
+        "python"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-statistics-edge-cases",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5705,
+            "output_tokens": 303,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.02166,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-thread-unsafe-counter": {
+      "title": "Counter loses updates under threads",
+      "tags": [
+        "bugfix",
+        "python",
+        "concurrency"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-thread-unsafe-counter",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5756,
+            "output_tokens": 326,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.022158,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "fix-utc-offset-conversion": {
+      "title": "Time zone conversion ignores minutes and naive datetimes",
+      "tags": [
+        "bugfix",
+        "python",
+        "dates"
+      ],
+      "trials": [
+        {
+          "task_id": "fix-utc-offset-conversion",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6097,
+            "output_tokens": 472,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.025371,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "implement-date-ranges": {
+      "title": "Implement overlap and merge for date ranges",
+      "tags": [
+        "feature",
+        "python",
+        "dates"
+      ],
+      "trials": [
+        {
+          "task_id": "implement-date-ranges",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5931,
+            "output_tokens": 444,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.024453,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "implement-lru-cache": {
+      "title": "Implement an LRU cache",
+      "tags": [
+        "feature",
+        "python",
+        "data-structures"
+      ],
+      "trials": [
+        {
+          "task_id": "implement-lru-cache",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6102,
+            "output_tokens": 524,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.026166,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "implement-markdown-table": {
+      "title": "Render a Markdown table",
+      "tags": [
+        "feature",
+        "python",
+        "strings"
+      ],
+      "trials": [
+        {
+          "task_id": "implement-markdown-table",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6521,
+            "output_tokens": 723,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.030408,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "implement-order-validation": {
+      "title": "Validate orders and enforce status transitions",
+      "tags": [
+        "feature",
+        "python",
+        "dataclasses"
+      ],
+      "trials": [
+        {
+          "task_id": "implement-order-validation",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6936,
+            "output_tokens": 893,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.034203,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "implement-retry-decorator": {
+      "title": "Implement a retry decorator",
+      "tags": [
+        "feature",
+        "python",
+        "decorators"
+      ],
+      "trials": [
+        {
+          "task_id": "implement-retry-decorator",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6142,
+            "output_tokens": 547,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.026631,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "implement-slugify": {
+      "title": "Implement slugify",
+      "tags": [
+        "feature",
+        "python",
+        "strings"
+      ],
+      "trials": [
+        {
+          "task_id": "implement-slugify",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5924,
+            "output_tokens": 413,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.023967,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "implement-top-words": {
+      "title": "Count the most frequent words",
+      "tags": [
+        "feature",
+        "python",
+        "strings"
+      ],
+      "trials": [
+        {
+          "task_id": "implement-top-words",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 5865,
+            "output_tokens": 408,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.023715,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "implement-topological-sort": {
+      "title": "Implement a topological sort with cycle detection",
+      "tags": [
+        "feature",
+        "python",
+        "algorithms"
+      ],
+      "trials": [
+        {
+          "task_id": "implement-topological-sort",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6277,
+            "output_tokens": 604,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.027891,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 1,
+          "tampered_files": [],
+          "tool_calls_allowed": 2,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    },
+    "rename-function-everywhere": {
+      "title": "Rename a function across modules, tests and docs",
+      "tags": [
+        "refactor",
+        "python",
+        "multi-file"
+      ],
+      "trials": [
+        {
+          "task_id": "rename-function-everywhere",
+          "trial": 1,
+          "passed": true,
+          "grader_passed": true,
+          "stop_reason": "completed",
+          "turns": 3,
+          "detail": "",
+          "usage": {
+            "input_tokens": 6738,
+            "output_tokens": 560,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          },
+          "cost_usd": 0.028614,
+          "duration_seconds": 0.0,
+          "grade_seconds": 0.0,
+          "files_changed": 5,
+          "tampered_files": [],
+          "tool_calls_allowed": 6,
+          "tool_calls_denied": 0,
+          "audit_verified": true,
+          "exit_code": 0,
+          "error": null,
+          "grader_output_tail": "",
+          "run_dir": ""
+        }
+      ]
+    }
+  }
+}

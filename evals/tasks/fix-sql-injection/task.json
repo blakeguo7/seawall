@@ -1,0 +1,29 @@
+{
+  "id": "fix-sql-injection",
+  "title": "User lookup breaks on apostrophes and allows SQL injection",
+  "prompt": "users.py builds SQL by string formatting. Looking up a user named O'Brien raises a syntax error, and a crafted name can return other users' rows. Fix the queries so names are always treated as data. Keep the function signatures and return values the same.",
+  "tags": [
+    "bugfix",
+    "python",
+    "security",
+    "sqlite"
+  ],
+  "difficulty": "easy",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_users.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

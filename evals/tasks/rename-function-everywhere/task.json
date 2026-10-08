@@ -1,0 +1,26 @@
+{
+  "id": "rename-function-everywhere",
+  "title": "Rename a function across modules, tests and docs",
+  "prompt": "Rename the function calc_total to compute_total everywhere: the code in pricing.py, the modules that use it, the tests in tests/, and the README. Behaviour must not change, and no reference to the old name may remain anywhere in the project.",
+  "tags": [
+    "refactor",
+    "python",
+    "multi-file"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

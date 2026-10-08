@@ -1,0 +1,28 @@
+{
+  "id": "implement-top-words",
+  "title": "Count the most frequent words",
+  "prompt": "words.py has a stub top_words(text, n=3, stopwords=STOPWORDS). Implement it as the docstring describes. tests/test_words.py has one example.",
+  "tags": [
+    "feature",
+    "python",
+    "strings"
+  ],
+  "difficulty": "easy",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_words.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "fix-csv-quoted-fields",
+  "title": "CSV parser breaks on quoted fields",
+  "prompt": "loader.py parses CSV text by splitting on commas, which breaks for quoted fields that contain commas or escaped quotes. Fix parse_line and load_rows so they handle RFC 4180 style quoting as the docstrings describe. tests/ has the basic cases.",
+  "tags": [
+    "bugfix",
+    "python",
+    "parsing"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_loader.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

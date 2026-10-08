@@ -1,0 +1,29 @@
+{
+  "id": "fix-money-rounding",
+  "title": "Receipt totals are off by a cent",
+  "prompt": "The receipt totals produced by cart.py are sometimes a cent off, for example for a price of 2.675. The calculation spans money.py, cart.py and receipt.py. Find the cause and fix it so that tax is computed per line and rounded half up to whole cents, as cart.py's docstring says. tests/ has a failing case.",
+  "tags": [
+    "bugfix",
+    "python",
+    "multi-file",
+    "numerics"
+  ],
+  "difficulty": "hard",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_cart.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

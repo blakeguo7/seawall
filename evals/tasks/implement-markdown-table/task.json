@@ -1,0 +1,28 @@
+{
+  "id": "implement-markdown-table",
+  "title": "Render a Markdown table",
+  "prompt": "mdtable.py has a stub render_table(headers, rows). Implement it so the output matches the format in its docstring exactly. tests/test_mdtable.py has one example.",
+  "tags": [
+    "feature",
+    "python",
+    "strings"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_mdtable.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

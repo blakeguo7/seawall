@@ -1,0 +1,28 @@
+{
+  "id": "implement-order-validation",
+  "title": "Validate orders and enforce status transitions",
+  "prompt": "orders.py defines an Order dataclass. Add the validation and the status transitions described in the docstrings: __post_init__ must reject invalid orders and Order.transition must enforce the allowed transitions. tests/test_orders.py has a basic example.",
+  "tags": [
+    "feature",
+    "python",
+    "dataclasses"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_orders.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "fix-statistics-edge-cases",
+  "title": "Statistics helpers crash or miscalculate on edge cases",
+  "prompt": "stats.py has three helpers, mean, median and variance. They crash on empty input and give wrong answers for some inputs. Fix them so they follow their docstrings and the tests in tests/ pass.",
+  "tags": [
+    "bugfix",
+    "python"
+  ],
+  "difficulty": "easy",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_stats.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

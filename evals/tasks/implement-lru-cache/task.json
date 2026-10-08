@@ -1,0 +1,28 @@
+{
+  "id": "implement-lru-cache",
+  "title": "Implement an LRU cache",
+  "prompt": "cache.py has an LRUCache class whose methods are stubs. Implement it as its docstring describes. tests/test_cache.py has a couple of basic checks.",
+  "tags": [
+    "feature",
+    "python",
+    "data-structures"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_cache.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "fix-thread-unsafe-counter",
+  "title": "Counter loses updates under threads",
+  "prompt": "counter.Counter is used from several threads and loses increments. Make it thread safe without changing its public interface (increment, add, reset, value). tests/test_counter.py shows the failure.",
+  "tags": [
+    "bugfix",
+    "python",
+    "concurrency"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_counter.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

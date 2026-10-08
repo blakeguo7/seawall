@@ -1,0 +1,26 @@
+{
+  "id": "add-cli-options",
+  "title": "Add options to a command-line tool",
+  "prompt": "greet.py is a tiny command-line tool built with argparse. Add three options as described in its docstring: --shout/-s, --times/-n and --output/-o. Keep the existing behaviour for runs without the new options. Add tests for the new options to tests/test_greet.py.",
+  "tags": [
+    "feature",
+    "python",
+    "cli"
+  ],
+  "difficulty": "easy",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

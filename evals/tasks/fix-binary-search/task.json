@@ -1,0 +1,28 @@
+{
+  "id": "fix-binary-search",
+  "title": "Binary search misses elements",
+  "prompt": "search.py has binary_search and insert_position. binary_search misses some elements and insert_position is wrong for some values. Fix both so they follow their docstrings; tests/test_search.py shows a failing case.",
+  "tags": [
+    "bugfix",
+    "python",
+    "algorithms"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_search.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

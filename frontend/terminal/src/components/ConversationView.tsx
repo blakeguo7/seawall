@@ -1,0 +1,148 @@
+import React from 'react';
+import {Box, Text} from 'ink';
+
+import {useTheme} from '../theme/ThemeContext.js';
+import type {TranscriptItem} from '../types.js';
+import {MarkdownText} from './MarkdownText.js';
+import {ToolCallDisplay} from './ToolCallDisplay.js';
+import {WelcomeBanner} from './WelcomeBanner.js';
+
+type ToolPair = readonly [TranscriptItem, TranscriptItem];
+type GroupedItem = TranscriptItem | ToolPair;
+
+function groupToolPairs(items: TranscriptItem[]): GroupedItem[] {
+	const result: GroupedItem[] = [];
+	let i = 0;
+	while (i < items.length) {
+		const cur = items[i];
+		const next = items[i + 1];
+		if (cur.role === 'tool' && next?.role === 'tool_result') {
+			result.push([cur, next] as const);
+			i += 2;
+		} else {
+			result.push(cur);
+			i++;
+		}
+	}
+	return result;
+}
+
+function ConversationViewInner({
+	items,
+	assistantBuffer,
+	showWelcome,
+}: {
+	items: TranscriptItem[];
+	assistantBuffer: string;
+	showWelcome: boolean;
+}): React.JSX.Element {
+	const {theme} = useTheme();
+	const visible = items.slice(-40);
+	const grouped = groupToolPairs(visible);
+
+	return (
+		<Box flexDirection="column" flexGrow={1}>
+			{showWelcome && items.length === 0 ? <WelcomeBanner /> : null}
+
+			{grouped.map((group, index) => {
+				if (Array.isArray(group)) {
+					const [toolItem, resultItem] = group as [TranscriptItem, TranscriptItem];
+					return (
+						<ToolCallDisplay
+							key={index}
+							item={toolItem}
+							resultItem={resultItem}
+						/>
+					);
+				}
+				return (
+					<MessageRow
+						key={index}
+						item={group as TranscriptItem}
+						theme={theme}
+					/>
+				);
+			})}
+
+			{assistantBuffer ? (
+				<Box marginTop={1} marginBottom={0} flexDirection="column">
+					<Text>
+						<Text color={theme.colors.success} bold>{theme.icons.assistant}</Text>
+					</Text>
+					<Box marginLeft={2} flexDirection="column">
+						<MarkdownText content={assistantBuffer} />
+					</Box>
+				</Box>
+			) : null}
+		</Box>
+	);
+}
+
+export const ConversationView = React.memo(ConversationViewInner);
+
+function MessageRow({
+	item,
+	theme,
+}: {
+	item: TranscriptItem;
+	theme: ReturnType<typeof useTheme>['theme'];
+}): React.JSX.Element {
+	switch (item.role) {
+		case 'user':
+			return (
+				<Box marginTop={1} marginBottom={0}>
+					<Text>
+						<Text color={theme.colors.secondary} bold>{theme.icons.user}</Text>
+						<Text>{item.text}</Text>
+					</Text>
+				</Box>
+			);
+
+		case 'assistant':
+			return (
+				<Box marginTop={1} marginBottom={0} flexDirection="column">
+					<Text>
+						<Text color={theme.colors.success} bold>{theme.icons.assistant}</Text>
+					</Text>
+					<Box marginLeft={2} flexDirection="column">
+						<MarkdownText content={item.text} />
+					</Box>
+				</Box>
+			);
+
+		case 'tool':
+		case 'tool_result':
+			return <ToolCallDisplay item={item} />;
+
+		case 'system':
+			return (
+				<Box marginTop={0}>
+					<Text>
+						<Text color={theme.colors.warning}>{theme.icons.system}</Text>
+						<Text color={theme.colors.warning}>{item.text}</Text>
+					</Text>
+				</Box>
+			);
+
+		case 'status':
+			return (
+				<Box marginTop={0}>
+					<Text color={theme.colors.info}>{item.text}</Text>
+				</Box>
+			);
+
+		case 'log':
+			return (
+				<Box>
+					<Text dimColor>{item.text}</Text>
+				</Box>
+			);
+
+		default:
+			return (
+				<Box>
+					<Text>{item.text}</Text>
+				</Box>
+			);
+	}
+}

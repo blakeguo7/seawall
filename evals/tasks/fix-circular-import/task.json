@@ -1,0 +1,28 @@
+{
+  "id": "fix-circular-import",
+  "title": "Two modules import each other",
+  "prompt": "Importing shop.models fails with an ImportError because shop.models and shop.pricing import each other at module level. Fix the import cycle without changing what the functions and classes do. Both modules must be importable on their own, in either order.",
+  "tags": [
+    "bugfix",
+    "python",
+    "multi-file"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_shop.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

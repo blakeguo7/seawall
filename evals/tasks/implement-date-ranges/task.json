@@ -1,0 +1,28 @@
+{
+  "id": "implement-date-ranges",
+  "title": "Implement overlap and merge for date ranges",
+  "prompt": "ranges.py has two stubs, overlaps() and merge_ranges(), for inclusive date ranges. Implement them as the docstrings describe.",
+  "tags": [
+    "feature",
+    "python",
+    "dates"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_ranges.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}

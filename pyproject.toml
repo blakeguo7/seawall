@@ -1,0 +1,91 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "seawall"
+version = "0.1.9"
+description = "Seawall: a coding-agent harness with approvals, an audit log, cost and run limits, evals and an HTTP service"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "blakeguo7" },
+]
+
+dependencies = [
+    "anthropic>=0.40.0",
+    "openai>=1.0.0",
+    "rich>=13.0.0",
+    "prompt-toolkit>=3.0.0",
+    "typer>=0.12.0",
+    "pydantic>=2.0.0",
+    "httpx>=0.27.0",
+    "mcp>=1.0.0,<2",
+    "pyperclip>=1.9.0",
+    "pyyaml>=6.0",
+    "questionary>=2.0.1",
+    "watchfiles>=0.20.0",
+    "croniter>=2.0.0",
+]
+
+[project.optional-dependencies]
+# `seawall serve`. Tested with starlette 1.7, uvicorn 0.54 and sse-starlette 3.5. The `mcp` dependency
+# already brings them in, so a normal install can serve; the extra states what the server needs.
+server = [
+    "starlette>=1.7",
+    "uvicorn>=0.54",
+    "sse-starlette>=3.5",
+]
+dev = [
+    "pexpect>=4.9.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+    "starlette>=1.7",
+    "uvicorn>=0.54",
+    "sse-starlette>=3.5",
+]
+
+[project.scripts]
+seawall = "seawall.cli:app"
+sw = "seawall.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/seawall"]
+
+[tool.hatch.build]
+exclude = [
+    "/.git",
+    "/.venv",
+    "/.seawall-venv",
+    "/.seawall",
+    "/.pytest_cache",
+    "/.mypy_cache",
+    "/.ruff_cache",
+    "/build",
+    "/dist",
+]
+
+[tool.hatch.build.targets.wheel.force-include]
+"frontend/terminal/package.json" = "seawall/_frontend/package.json"
+"frontend/terminal/tsconfig.json" = "seawall/_frontend/tsconfig.json"
+"frontend/terminal/src" = "seawall/_frontend/src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# Pin the rule set so a newer ruff does not silently change what CI checks.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true

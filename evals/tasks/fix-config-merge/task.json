@@ -1,0 +1,28 @@
+{
+  "id": "fix-config-merge",
+  "title": "Config loader mutates its defaults and merges shallowly",
+  "prompt": "config.load_config is supposed to merge a JSON file over the built-in defaults, recursively, without ever modifying the defaults. Today a config that sets only server.port loses the other server settings, and loading a config changes DEFAULTS for later calls. Fix config.py as the docstring says and make the tests in tests/ pass.",
+  "tags": [
+    "bugfix",
+    "python",
+    "config"
+  ],
+  "difficulty": "medium",
+  "max_turns": 30,
+  "timeout_seconds": 300,
+  "protected": [
+    "tests/test_config.py"
+  ],
+  "grading": {
+    "command": [
+      "{python}",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "_grader"
+    ],
+    "timeout_seconds": 120
+  }
+}
