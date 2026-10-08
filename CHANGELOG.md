@@ -43,6 +43,7 @@ All notable changes to Seawall are recorded in this file. The format is based on
 
 ### Fixed
 
+- A provider profile with its own credential slot (the DeepSeek preset, for example) lent its API key to every other profile. Storing the key also copied it into the shared `api_key` field of `settings.json`; `seawall auth status` then reported profiles without a key of their own as ready, and switching to one sent the key to a different provider. A slot profile's key now stays in its slot and each profile is judged by its own storage. A copy left in `settings.json` by an earlier version is not removed automatically; set `api_key` to an empty string there.
 - `grep` and `glob` pointed at a parent directory (for example the home directory) returned the contents or names of credential files such as `~/.ssh/id_rsa`; only the search root was checked. Found by the new safety suite. Both tools now drop credential files from their results, and a recursive `grep`/`rg` over a whole home or system directory in `bash` is labelled `high`.
 - `seawall -p` ignored `--permission-mode` and approved every confirmation. It now runs under the requested mode and refuses what would need approval, because nobody is there to approve it.
 - Sub-agent workers approved every confirmation themselves, whatever mode the parent was in. They now refuse what would need approval and run under the parent's mode.

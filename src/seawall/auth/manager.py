@@ -198,8 +198,17 @@ class AuthManager:
             auth_state = str(source_status.get("state", "missing"))
             if auth_source_uses_api_key(profile.auth_source):
                 storage_provider = credential_storage_provider_name(name, profile)
-                configured = bool(load_credential(storage_provider, "api_key")) or configured
-                if not configured and name == active and getattr(self.settings, "api_key", ""):
+                # The source-level result also counts the flat ``api_key``, which belongs to the
+                # active profile only. Judge each profile by its own storage instead: an
+                # environment variable serves every profile on the source, the flat key only the
+                # active profile, and never one that keeps its key in its own slot.
+                configured = source_status.get("source") == "env" or bool(load_credential(storage_provider, "api_key"))
+                if (
+                    not configured
+                    and name == active
+                    and not profile.credential_slot
+                    and getattr(self.settings, "api_key", "")
+                ):
                     configured = True
                 auth_state = "configured" if configured else "missing"
             statuses[name] = {
@@ -330,8 +339,15 @@ class AuthManager:
     def store_credential(self, provider: str, key: str, value: str) -> None:
         """Store a credential for the given provider."""
         store_credential(provider, key, value)
-        # Keep the flattened active settings snapshot aligned for compatibility.
-        if key == "api_key" and provider == auth_source_provider_name(self.settings.resolve_profile()[1].auth_source):
+        # Keep the flattened active settings snapshot aligned for compatibility. A profile with its
+        # own credential slot is left out: the flat field is shared, so a copy of its key would be
+        # read as the key of every other profile that has none.
+        active_profile = self.settings.resolve_profile()[1]
+        if (
+            key == "api_key"
+            and not active_profile.credential_slot
+            and provider == auth_source_provider_name(active_profile.auth_source)
+        ):
             try:
                 updated = self.settings.model_copy(update={"api_key": value})
                 self._settings = updated.materialize_active_profile()
@@ -346,7 +362,8 @@ class AuthManager:
             raise ValueError(f"Unknown provider profile: {profile_name!r}")
         storage_provider = credential_storage_provider_name(profile_name, profile)
         store_credential(storage_provider, key, value)
-        if key == "api_key" and profile_name == self.get_active_profile():
+        # Same rule as in ``store_credential``: a slot profile's key stays in its slot.
+        if key == "api_key" and profile_name == self.get_active_profile() and not profile.credential_slot:
             try:
                 updated = self.settings.model_copy(update={"api_key": value})
                 self._settings = updated.materialize_active_profile()
