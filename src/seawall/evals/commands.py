@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import shutil
 import sys
 import tempfile
@@ -88,7 +89,7 @@ def eval_run(
     agent: str = typer.Option(
         "oracle",
         "--agent",
-        help="Who does the work: oracle, noop or cheater (scripted, free, deterministic), or live (a real model; costs money)",
+        help="Who does the work: oracle, noop, cheater or wrongfix (scripted, free, deterministic), or live (a real model; costs money)",
     ),
     trials: int = typer.Option(1, "--trials", min=1, help="Runs per task, to see variance"),
     jobs: int = typer.Option(4, "--jobs", min=1, help="Trials run in parallel"),
@@ -96,9 +97,9 @@ def eval_run(
     task: list[str] = typer.Option(None, "--task", help="Only this task or scenario id (repeatable)"),
     out: Path | None = typer.Option(None, "--out", help="Write the results JSON here"),
     work_dir: Path | None = typer.Option(None, "--work-dir", help="Where trial workspaces go (default: .eval-runs/<time>)"),
-    model: str | None = typer.Option(None, "--model", help="live: model name"),
-    base_url: str | None = typer.Option(None, "--base-url", help="live: API base URL"),
-    api_format: str | None = typer.Option(None, "--api-format", help="live: anthropic or openai"),
+    model: str | None = typer.Option(None, "--model", help="live: model name (default: the one you configured)"),
+    base_url: str | None = typer.Option(None, "--base-url", help="live: API base URL (default: the one you configured)"),
+    api_format: str | None = typer.Option(None, "--api-format", help="live: anthropic or openai (default: the one you configured)"),
     permission_mode: str | None = typer.Option(None, "--permission-mode", help="Default: allow only the task's tools"),
     max_budget_usd: float | None = typer.Option(None, "--max-budget-usd", min=0.0001, help="live: spend limit per trial"),
     max_total_tokens: int | None = typer.Option(None, "--max-total-tokens", min=1, help="live: token limit per trial"),
@@ -107,7 +108,7 @@ def eval_run(
 ) -> None:
     """Run a suite and print the report."""
     from seawall.evals.report import format_report
-    from seawall.evals.runner import AgentSpec
+    from seawall.evals.runner import AgentSpec, configured_key_env, use_configured_provider
     from seawall.evals.suite import run_safety_suite, run_suite
 
     if suite not in {"coding", "safety"}:
@@ -148,7 +149,10 @@ def eval_run(
             raise typer.Exit(2)
     else:
         tasks = _load(tasks_dir, task)
-        label = "a live model" if spec.is_live else f"the {agent} scripted agent"
+        if spec.is_live:
+            spec = use_configured_provider(spec)
+            os.environ.update(configured_key_env(spec))  # agent_flags forwards it like any key in the environment
+        label = f"a live model ({spec.model})" if spec.is_live else f"the {agent} scripted agent"
         print(f"running {len(tasks)} tasks x {trials} with {label} in {run_dir}", file=sys.stderr)
         result = asyncio.run(
             run_suite(tasks, spec, suite="coding", trials=trials, jobs=jobs, out_dir=run_dir, on_trial=_progress)
@@ -173,6 +177,33 @@ def eval_report(
     from seawall.evals.suite import SuiteResult
 
     print(format_report(SuiteResult.load(results), markdown=markdown))
+
+
+@eval_app.command("explain")
+def eval_explain(
+    results: Path = typer.Argument(..., help="A results JSON file written by `seawall eval run`"),
+    task: str | None = typer.Option(None, "--task", help="Only this task"),
+    trial: int | None = typer.Option(None, "--trial", min=1, help="Only this trial number"),
+) -> None:
+    """Say why each failed trial failed: its cause, the evidence, and its trace."""
+    from seawall.evals.attribution import explain
+    from seawall.evals.suite import SuiteResult
+
+    result = SuiteResult.load(results)
+    if task is not None and task not in result.tasks:
+        print(f"error: no task {task!r} in {results}", file=sys.stderr)
+        raise typer.Exit(2)
+    chosen = [
+        t
+        for task_id, outcome in result.tasks.items()
+        if task is None or task_id == task
+        for t in outcome.trials
+        if (trial is None or t.trial == trial) and (task is not None or trial is not None or not t.passed)
+    ]
+    if not chosen:
+        print("No failed trials." if task is None and trial is None else "No such trial.")
+        return
+    print("\n\n".join(explain(t) for t in chosen))
 
 
 @eval_app.command("compare")

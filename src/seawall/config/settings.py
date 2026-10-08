@@ -131,6 +131,26 @@ class AuditSettings(BaseModel):
     )
 
 
+class TraceSettings(BaseModel):
+    """Trace configuration: one file per session with a timed span for every step of each run."""
+
+    enabled: bool = True
+    directory: str = Field(
+        default="",
+        description="Where trace files are written. Empty means <data dir>/traces.",
+    )
+    capture_content: bool = Field(
+        default=False,
+        description=(
+            "Keep a short preview of each model reply and tool output in the spans. Off by default: "
+            "spans then hold timings, token counts, costs and statuses, and no text."
+        ),
+    )
+    max_field_chars: int = Field(
+        default=1000, ge=80, description="Longest string kept in a span attribute."
+    )
+
+
 class MemorySettings(BaseModel):
     """Memory system configuration."""
 
@@ -552,6 +572,7 @@ class Settings(BaseModel):
     memory: MemorySettings = Field(default_factory=MemorySettings)
     sandbox: SandboxSettings = Field(default_factory=SandboxSettings)
     audit: AuditSettings = Field(default_factory=AuditSettings)
+    trace: TraceSettings = Field(default_factory=TraceSettings)
     limits: LimitSettings = Field(default_factory=LimitSettings)
     pricing: dict[str, ModelPriceConfig] = Field(
         default_factory=dict,

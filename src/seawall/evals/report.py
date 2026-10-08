@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from statistics import mean
 from typing import Sequence
 
+from seawall.evals.attribution import cause_counts
 from seawall.evals.runner import TrialResult
 from seawall.evals.suite import SuiteResult, TaskOutcome
 
@@ -122,6 +123,9 @@ def format_report(result: SuiteResult, *, markdown: bool = False, show_failures:
     ]
     if show_failures:
         failed = [t for o in result.tasks.values() for t in o.trials if not t.passed]
+        if failed:
+            causes = cause_counts(failed)
+            lines.append("failure causes: " + ", ".join(f"{name} x{count}" for name, count in causes.most_common()))
         for trial in failed:
             why = (
                 f"tampered with {', '.join(trial.tampered_files)}"

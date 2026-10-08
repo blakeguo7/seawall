@@ -21,6 +21,7 @@ from seawall.permissions.approvals import Approver, CallbackApprover
 from seawall.permissions.checker import PermissionChecker
 from seawall.services.autodream.service import schedule_auto_dream
 from seawall.tools.base import ToolRegistry
+from seawall.tracing import NULL_TRACER, AnyTracer
 
 
 def _is_coordinator_context(message: ConversationMessage) -> bool:
@@ -52,6 +53,7 @@ class QueryEngine:
         audit: AuditSink = NULL_AUDIT,
         limits: RunLimits | None = None,
         cost_tracker: CostTracker | None = None,
+        tracer: AnyTracer = NULL_TRACER,
     ) -> None:
         """``approver`` answers confirmation requests. ``permission_prompt`` is the older
         ``async (tool_name, reason) -> bool`` form and is wrapped into an approver.
@@ -71,6 +73,7 @@ class QueryEngine:
             approver = CallbackApprover(permission_prompt)
         self._approver = approver
         self._audit = audit
+        self._tracer = tracer
         self._ask_user_prompt = ask_user_prompt
         self._hook_executor = hook_executor
         self._tool_metadata = tool_metadata or {}
@@ -134,7 +137,7 @@ class QueryEngine:
         return self._last_run
 
     def _metered_client(self) -> SupportsStreamingMessages:
-        return MeteredApiClient(self._api_client, self._cost_tracker)
+        return MeteredApiClient(self._api_client, self._cost_tracker, self._tracer)
 
     def clear(self) -> None:
         """Clear the in-memory conversation history."""
@@ -305,6 +308,7 @@ class QueryEngine:
             audit=self._audit,
             limits=self._limits,
             cost=self._cost_tracker,
+            tracer=self._tracer,
         )
         query_messages = list(self._messages)
         coordinator_context = self._build_coordinator_context_message()
@@ -351,6 +355,7 @@ class QueryEngine:
             audit=self._audit,
             limits=self._limits,
             cost=self._cost_tracker,
+            tracer=self._tracer,
         )
         async with aclosing(run_query(context, self._messages)) as stream:
             async for event, _usage in stream:

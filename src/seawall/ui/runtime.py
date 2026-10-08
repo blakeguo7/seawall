@@ -13,6 +13,7 @@ from seawall.api.client import AnthropicApiClient, SupportsStreamingMessages
 from seawall.api.openai_client import OpenAICompatibleClient
 from seawall.api.provider import auth_status, detect_provider
 from seawall.audit import NULL_AUDIT, AuditSink, open_session_audit
+from seawall.tracing import open_session_trace
 from seawall.commands import (
     CommandContext,
     CommandResult,
@@ -358,6 +359,7 @@ async def build_runtime(
         hook_executor=hook_executor,
         settings=settings,
         audit=audit,
+        tracer=open_session_trace(settings.trace, session_id),
         limits=RunLimits.from_settings(settings.limits),
         cost_tracker=CostTracker(PriceTable.from_settings(settings.pricing)),
         tool_metadata={

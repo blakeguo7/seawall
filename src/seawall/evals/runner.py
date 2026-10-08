@@ -8,11 +8,12 @@ import os
 import signal
 import sys
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
 from seawall.audit import read_records, verify_log
+from seawall.evals.attribution import facts_from_home
 from seawall.evals.grader import GradeResult, clean_env, grade
 from seawall.evals.scripted import SCRIPTED_AGENTS, SCRIPTED_MODEL, ScriptedServer
 from seawall.evals.task import Task
@@ -45,6 +46,9 @@ class AgentSpec:
     permission_mode: str | None = None
     max_budget_usd: float | None = None
     max_total_tokens: int | None = None
+    # Model prices (US dollars per million tokens) for a live agent's own settings.json; see
+    # ``use_configured_provider``. Kept out of comparisons so that a spec stays hashable.
+    pricing: dict[str, dict[str, float]] | None = field(default=None, compare=False)
 
     @property
     def is_live(self) -> bool:
@@ -114,6 +118,8 @@ class TrialResult:
     error: str | None = None
     grader_output_tail: str = ""
     run_dir: str = ""
+    # What the agent's trace shows (see ``evals.attribution.TraceFacts``); empty when it left none.
+    trace: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -222,6 +228,47 @@ def read_audit(home: Path) -> AuditSummary:
     return AuditSummary(path=str(path), records=list(read_records(path)), verified=verify_log(path).ok)
 
 
+def use_configured_provider(spec: AgentSpec) -> AgentSpec:
+    """Fill in, from the provider the user configured, whatever a live agent was not told.
+
+    The agent runs under a throwaway HOME and cannot see the user's settings, so the model, the
+    endpoint, the API format and the prices are read here and handed over. What the caller gave wins.
+    """
+    from seawall.config import load_settings
+
+    settings = load_settings()
+    prices = {name: price.model_dump(exclude_none=True) for name, price in settings.pricing.items()}
+    return replace(
+        spec,
+        model=spec.model or settings.model,
+        base_url=spec.base_url or settings.base_url,
+        api_format=spec.api_format or settings.api_format,
+        pricing=prices or None,
+    )
+
+
+def configured_key_env(spec: AgentSpec) -> dict[str, str]:
+    """The user's own key as an environment variable, when the agent talks to where that key belongs.
+
+    A key is sent only to the provider it was issued for, so it is handed over only when the agent's
+    endpoint and API format are the configured ones. A key already in the environment is left alone.
+    """
+    from seawall.config import load_settings
+    from seawall.config.settings import auth_source_env_var_candidates
+
+    settings = load_settings()
+    if spec.base_url != settings.base_url or spec.api_format != settings.api_format:
+        return {}
+    auth_source = settings.resolve_profile()[1].auth_source
+    forwarded = [name for name in auth_source_env_var_candidates(auth_source) if name.startswith(LIVE_ENV_PREFIXES)]
+    if not forwarded or any(os.environ.get(name) for name in forwarded):
+        return {}
+    try:
+        return {forwarded[0]: settings.resolve_auth().value}
+    except ValueError:  # no key stored for this profile
+        return {}
+
+
 def agent_flags(task: Task, agent: AgentSpec, *, base_url: str | None) -> tuple[list[str], dict[str, str]]:
     """The command-line flags and extra environment for a trial's agent process."""
     flags = ["--max-turns", str(task.max_turns)]
@@ -261,7 +308,7 @@ async def run_trial(
     workspace, home = run_dir / "workspace", run_dir / "home"
     home.mkdir(parents=True, exist_ok=True)
     before = materialize(task, workspace)
-    write_settings(home, pricing=None if agent.is_live else SCRIPTED_PRICING)
+    write_settings(home, pricing=agent.pricing if agent.is_live else SCRIPTED_PRICING)
 
     base_url: str | None = None
     if not agent.is_live:
@@ -279,6 +326,7 @@ async def run_trial(
     changes = diff_trees(before, hash_tree(workspace))
     tampered = protected_changes(task, workspace, before)
     audit = read_audit(home)
+    facts = facts_from_home(home)
     graded: GradeResult = await grade(task, workspace, home)
 
     result = process.result or {}
@@ -309,6 +357,7 @@ async def run_trial(
         error=error,
         grader_output_tail="" if graded.passed else graded.output_tail,
         run_dir=str(run_dir),
+        trace=facts.to_dict() if facts is not None else {},
     )
 
 

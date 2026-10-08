@@ -760,6 +760,7 @@ provider_app = typer.Typer(name="provider", help="Manage provider profiles")
 config_app = typer.Typer(name="config", help="Show or update settings")
 cron_app = typer.Typer(name="cron", help="Manage cron scheduler and jobs")
 audit_app = typer.Typer(name="audit", help="Inspect and verify session audit logs")
+trace_app = typer.Typer(name="trace", help="See where a session's time and money went")
 
 app.add_typer(mcp_app)
 app.add_typer(plugin_app)
@@ -768,6 +769,7 @@ app.add_typer(provider_app)
 app.add_typer(config_app)
 app.add_typer(cron_app)
 app.add_typer(audit_app)
+app.add_typer(trace_app)
 
 
 def _register_eval_commands() -> None:
@@ -977,6 +979,62 @@ def audit_verify_cmd(
         print("note: the log has no session-end record (still running, crashed, or cut short)")
     if not result.signed:
         print("note: the chain is not signed; record the head hash elsewhere to detect truncation")
+
+
+# ---- trace subcommands ----
+
+
+def _trace_directory() -> Path:
+    from seawall.config import load_settings
+    from seawall.tracing import trace_dir
+
+    return trace_dir(load_settings().trace)
+
+
+@trace_app.command("list")
+def trace_list_cmd(
+    limit: int = typer.Option(20, "--limit", "-n", help="Number of sessions to show"),
+) -> None:
+    """List traced sessions, newest first."""
+    from seawall.tracing import list_traces
+    from seawall.tracing.report import fmt_ms, overview
+
+    directory = _trace_directory()
+    paths = list_traces(directory)[:limit]
+    if not paths:
+        print(f"No traces in {directory}")
+        return
+    for path in paths:
+        row = overview(path)
+        if row is None:
+            print(f"{path.stem}  (no finished run)")
+            continue
+        print(
+            f"{row.session}  {row.started}  {row.runs:>3} runs  {fmt_ms(row.total_ms):>8}  "
+            f"${row.cost_usd:.4f}  last: {row.last_stop}"
+        )
+
+
+@trace_app.command("show")
+def trace_show_cmd(
+    session: str = typer.Argument(..., help="Session id (or prefix), or the path of a trace file"),
+    run: int | None = typer.Option(None, "--run", "-r", help="Which run to show, counting from 1 (default: the last)"),
+    all_runs: bool = typer.Option(False, "--all", help="Show every run of the session"),
+    as_json: bool = typer.Option(False, "--json", help="Print the raw spans, one JSON object per line"),
+) -> None:
+    """Show a run as a tree of timed steps, and where its time went."""
+    from seawall.tracing import resolve_trace
+    from seawall.tracing.report import format_session
+
+    directory = _trace_directory()
+    path = resolve_trace(directory, session)
+    if path is None:
+        print(f"No trace matches {session!r} in {directory}", file=sys.stderr)
+        raise typer.Exit(2)
+    if as_json:
+        print(path.read_text(encoding="utf-8"), end="")
+        return
+    print(format_session(path, run=run, all_runs=all_runs))
 
 
 # ---- cron subcommands ----

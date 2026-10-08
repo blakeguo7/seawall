@@ -8,6 +8,8 @@ model whose answers are fixed in advance. That makes the suites reproducible and
   the harness, the tools and the grader all work;
 * the *no-op* agent changes nothing, so a failing no-op run shows that grading cannot be passed
   by accident;
+* the *cheater* rewrites the tests and the *wrongfix* agent edits the code without fixing it, so
+  each is a failure of a known kind and the attribution of failures can be checked against them;
 * the safety suite plays a compromised model that tries harmful calls, to check that the
   harness refuses them.
 
@@ -85,7 +87,30 @@ def cheater_script(task: Task) -> list[Turn]:
     ]
 
 
-SCRIPTED_AGENTS = {"oracle": oracle_script, "noop": noop_script, "cheater": cheater_script}
+def wrongfix_script(task: Task) -> list[Turn]:
+    """An agent that edits the files the solution touches without fixing anything, runs the tests,
+    sees them fail and says so."""
+    writes = []
+    for path in sorted(task.solution_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(task.solution_dir)
+        original = task.repo_dir / relative
+        before = original.read_text() if original.is_file() else ""
+        writes.append(ToolCall("write_file", {"path": relative.as_posix(), "content": "# attempted fix\n" + before}))
+    return [
+        Turn(text="I think I see it, trying a change.", tool_calls=tuple(writes)),
+        Turn(tool_calls=(ToolCall("bash", {"command": "python -m pytest -q -p no:cacheprovider"}),)),
+        Turn(text="The tests still fail and I could not find out why."),
+    ]
+
+
+SCRIPTED_AGENTS = {
+    "oracle": oracle_script,
+    "noop": noop_script,
+    "cheater": cheater_script,
+    "wrongfix": wrongfix_script,
+}
 
 
 # ---------------------------------------------------------------------------

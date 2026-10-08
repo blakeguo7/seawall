@@ -61,6 +61,7 @@ from seawall.permissions.checker import PermissionChecker, PermissionDecision
 from seawall.services.tool_outputs import tool_output_inline_chars, tool_output_preview_chars
 from seawall.tools.base import ToolExecutionContext
 from seawall.tools.base import ToolRegistry
+from seawall.tracing import NULL_SPAN, NULL_TRACER, AnyTracer, NullSpan, Span
 
 AUTO_COMPACT_STATUS_MESSAGE = "Auto-compacting conversation memory to keep things fast and focused."
 REACTIVE_COMPACT_STATUS_MESSAGE = "Prompt too long; compacting conversation memory and retrying."
@@ -175,6 +176,7 @@ class QueryContext:
     audit: AuditSink = NULL_AUDIT
     limits: RunLimits | None = None
     cost: CostTracker | None = None
+    tracer: AnyTracer = NULL_TRACER
 
 
 def _append_capped_unique(bucket: list[Any], value: Any, *, limit: int) -> None:
@@ -660,6 +662,9 @@ class _RunState:
     detail: str = ""
     turns: int = 0
     started: float = 0.0
+    # The turn in progress. It is ended when the next one starts or the run ends, because a turn
+    # has many ways out of the loop body and a span around it would mean re-indenting all of them.
+    turn_span: Span | NullSpan = NULL_SPAN
 
 
 async def run_query(
@@ -672,6 +677,9 @@ async def run_query(
     hits ``max_turns`` also raises :class:`MaxTurnsExceeded`, after yielding it.
     """
     run = _RunState(started=time.monotonic())
+    run_span = context.tracer.start("run", make_current=True, model=context.model, max_turns=context.max_turns)
+    usage_before = context.cost.total if context.cost is not None else None
+    cost_before = context.cost.cost_usd if context.cost is not None else 0.0
     finished = False
     try:
         try:
@@ -687,16 +695,50 @@ async def run_query(
         finished = True
         yield _run_finished(context, run), None
     finally:
-        if not finished:
-            run.reason = StopReason.INTERRUPTED
-        _audit_record(
-            context,
-            "run.finished",
-            stop_reason=run.reason.value,
-            detail=run.detail,
-            turns=run.turns,
-            **_cost_summary(context),
+        try:
+            if not finished:
+                run.reason = StopReason.INTERRUPTED
+            _audit_record(
+                context,
+                "run.finished",
+                stop_reason=run.reason.value,
+                detail=run.detail,
+                turns=run.turns,
+                **_cost_summary(context),
+            )
+        finally:
+            _end_run_spans(context, run, run_span, usage_before, cost_before)
+
+
+def _end_run_spans(
+    context: QueryContext,
+    run: _RunState,
+    run_span: Span | NullSpan,
+    usage_before: UsageSnapshot | None,
+    cost_before: float,
+) -> None:
+    """Close the turn in progress and the run, recording what this run alone used."""
+    if run.reason in (StopReason.ERROR, StopReason.INTERRUPTED):
+        status = "error"
+    elif run.reason is StopReason.COMPLETED:
+        status = "ok"
+    else:
+        status = "stopped"  # a limit or the loop guard cut it short
+    run.turn_span.end("error" if status == "error" else "ok")
+    attrs: dict[str, Any] = {"stop_reason": run.reason.value, "turns": run.turns}
+    if run.detail:
+        attrs["detail"] = run.detail
+    if context.cost is not None and usage_before is not None:
+        used = context.cost.total
+        attrs.update(
+            input_tokens=used.input_tokens - usage_before.input_tokens,
+            output_tokens=used.output_tokens - usage_before.output_tokens,
+            cache_read_tokens=used.cache_read_input_tokens - usage_before.cache_read_input_tokens,
+            cache_write_tokens=used.cache_creation_input_tokens - usage_before.cache_creation_input_tokens,
+            cost_usd=round(context.cost.cost_usd - cost_before, 6),
+            unpriced_models=list(context.cost.unpriced_models),
         )
+    run_span.end(status, **attrs)
 
 
 def _cost_summary(context: QueryContext) -> dict[str, Any]:
@@ -760,38 +802,62 @@ async def _run_loop(
     ) -> AsyncIterator[tuple[StreamEvent, UsageSnapshot | None]]:
         nonlocal last_compaction_result
         progress_queue: asyncio.Queue[CompactProgressEvent] = asyncio.Queue()
+        # The check runs at the start of every turn and almost always finds nothing to do; such a
+        # span is dropped. One that began compacting stays, even if it failed.
+        span = context.tracer.start("compaction", make_current=True, trigger=trigger, forced=force)
+        phases: set[str] = set()
+        status = "cancelled"  # until the compaction check returns
 
         async def _progress(event: CompactProgressEvent) -> None:
             await progress_queue.put(event)
 
-        task = asyncio.create_task(
-            auto_compact_if_needed(
-                messages,
-                api_client=context.api_client,
-                model=context.model,
-                system_prompt=context.system_prompt,
-                state=compact_state,
-                progress_callback=_progress,
-                force=force,
-                trigger=trigger,
-                hook_executor=context.hook_executor,
-                carryover_metadata=context.tool_metadata,
-                context_window_tokens=context.context_window_tokens,
-                auto_compact_threshold_tokens=context.auto_compact_threshold_tokens,
+        try:
+            task = asyncio.create_task(
+                auto_compact_if_needed(
+                    messages,
+                    api_client=context.api_client,
+                    model=context.model,
+                    system_prompt=context.system_prompt,
+                    state=compact_state,
+                    progress_callback=_progress,
+                    force=force,
+                    trigger=trigger,
+                    hook_executor=context.hook_executor,
+                    carryover_metadata=context.tool_metadata,
+                    context_window_tokens=context.context_window_tokens,
+                    auto_compact_threshold_tokens=context.auto_compact_threshold_tokens,
+                )
             )
-        )
-        while True:
-            try:
-                event = await asyncio.wait_for(progress_queue.get(), timeout=0.05)
+            while True:
+                try:
+                    event = await asyncio.wait_for(progress_queue.get(), timeout=0.05)
+                    phases.add(event.phase)
+                    yield event, None
+                except asyncio.TimeoutError:
+                    if task.done():
+                        break
+                    continue
+            while not progress_queue.empty():
+                event = progress_queue.get_nowait()
+                phases.add(event.phase)
                 yield event, None
-            except asyncio.TimeoutError:
-                if task.done():
-                    break
-                continue
-        while not progress_queue.empty():
-            yield progress_queue.get_nowait(), None
-        last_compaction_result = await task
-        return
+            last_compaction_result = await task
+            status = "ok"
+            return
+        except Exception as exc:
+            status = "error"
+            span.set(error=f"{type(exc).__name__}: {exc}")
+            raise
+        finally:
+            compacted = bool(last_compaction_result[1]) if status == "ok" else False
+            if status == "ok" and not compacted and "compact_start" not in phases and "compact_failed" not in phases:
+                span.discard()
+            else:
+                span.end(
+                    "error" if "compact_failed" in phases else status,
+                    compacted=compacted,
+                    phases=sorted(phases),
+                )
 
     guard = LoopGuard(context.limits.loop) if context.limits is not None else None
     turn_count = 0
@@ -806,6 +872,8 @@ async def _run_loop(
                 return
         turn_count += 1
         run.turns = turn_count
+        run.turn_span.end()
+        run.turn_span = context.tracer.start("turn", make_current=True, index=turn_count)
         if effective_max_tokens != context.max_tokens and not reported_token_clamp:
             reported_token_clamp = True
             yield StatusEvent(
@@ -933,7 +1001,7 @@ async def _run_loop(
             tc = tool_calls[0]
             yield ToolExecutionStarted(tool_name=tc.name, tool_input=tc.input), None
             try:
-                result = await _execute_tool_call(context, tc.name, tc.id, tc.input)
+                result = await _traced_tool_call(context, run.turn_span, tc)
             except Exception as exc:
                 log.exception("tool execution raised: name=%s id=%s", tc.name, tc.id)
                 result = ToolResultBlock(
@@ -954,7 +1022,7 @@ async def _run_loop(
                 yield ToolExecutionStarted(tool_name=tc.name, tool_input=tc.input), None
 
             async def _run(tc):
-                return await _execute_tool_call(context, tc.name, tc.id, tc.input)
+                return await _traced_tool_call(context, run.turn_span, tc)
 
             # Use return_exceptions=True so a single failing tool does not abandon
             # its siblings as cancelled coroutines and leave the conversation with
@@ -1006,11 +1074,45 @@ async def _run_loop(
     raise RuntimeError("Query loop exited without a max_turns limit or final response")
 
 
+async def _traced_tool_call(context: QueryContext, parent: Span | NullSpan, tc: Any) -> ToolResultBlock:
+    """Run one tool call inside a ``tool.call`` span that hangs under the turn that asked for it.
+
+    The span covers everything between the model asking and the result going back: hooks,
+    the permission check, any wait for approval, and the tool itself (``exec_ms`` is that last part).
+    """
+    tracer = context.tracer
+    span = tracer.start(
+        "tool.call",
+        parent=parent,
+        tool=tc.name,
+        call_id=tc.id,
+        **({"input": summarize_tool_input(tc.input)} if tracer.enabled else {}),
+    )
+    try:
+        result = await _execute_tool_call(context, tc.name, tc.id, tc.input, span)
+    except BaseException as exc:
+        if isinstance(exc, asyncio.CancelledError):
+            span.end("cancelled")
+        else:
+            span.end("error", error=f"{type(exc).__name__}: {exc}")
+        raise
+    attrs: dict[str, Any] = {"output_chars": len(result.content)}
+    if tracer.capture_content:
+        attrs["output_preview"] = result.content[:300]
+    metadata = result.result_metadata or {}
+    if metadata.get("denied"):
+        span.end("denied", denied_by=metadata.get("denied_by"), **attrs)
+    else:
+        span.end("error" if result.is_error else "ok", **attrs)
+    return result
+
+
 async def _execute_tool_call(
     context: QueryContext,
     tool_name: str,
     tool_use_id: str,
     tool_input: dict[str, object],
+    span: Span | NullSpan = NULL_SPAN,
 ) -> ToolResultBlock:
     if context.hook_executor is not None:
         pre_hooks = await context.hook_executor.execute(
@@ -1065,6 +1167,7 @@ async def _execute_tool_call(
         command=_command,
         cwd=context.cwd,
     )
+    span.set(risk=decision.risk.label, needs_approval=decision.requires_confirmation)
     approval: ApprovalDecision | None = None
     if not decision.allowed:
         if not decision.requires_confirmation:
@@ -1085,7 +1188,7 @@ async def _execute_tool_call(
                 source="policy",
                 decision=decision,
             )
-        approval = await _ask_for_approval(context, tool_name, tool_use_id, tool_input, decision)
+        approval = await _ask_for_approval(context, tool_name, tool_use_id, tool_input, decision, parent=span)
         if not approval.approved:
             log.debug("approval %s for %s", approval.outcome.value, tool_name)
             _audit_decision(
@@ -1144,6 +1247,7 @@ async def _execute_tool_call(
         ),
     )
     elapsed = time.monotonic() - t0
+    span.set(exec_ms=round(elapsed * 1000, 1))
     log.debug("executed %s in %.2fs err=%s output_len=%d",
               tool_name, elapsed, result.is_error, len(result.output or ""))
     _audit_result(context, tool_use_id, tool_name, result.is_error, result.output or "", elapsed)
@@ -1228,6 +1332,7 @@ async def _ask_for_approval(
     tool_use_id: str,
     tool_input: dict[str, object],
     decision: PermissionDecision,
+    parent: Span | NullSpan | None = None,
 ) -> ApprovalDecision:
     """Ask the approver about a call; silence, errors and a missing approver all mean no."""
     log.debug("approval requested for %s: %s", tool_name, decision.reason)
@@ -1259,14 +1364,17 @@ async def _ask_for_approval(
         risk=request.risk.label,
     )
     started = time.monotonic()
+    wait_span = context.tracer.start("approval.wait", parent=parent, tool=tool_name, risk=request.risk.label)
     approver = context.approver or DenyApprover()
     try:
         answer = await approver.request(request)
     except asyncio.CancelledError:
+        wait_span.end("cancelled")
         raise
     except Exception as exc:
         log.exception("approver failed for %s", tool_name)
         answer = ApprovalDecision(ApprovalOutcome.DENIED, "error", f"approver failed: {exc}")
+    wait_span.end("ok", outcome=answer.outcome.value, decided_by=answer.decided_by)
     _audit_record(
         context,
         "approval.resolved",

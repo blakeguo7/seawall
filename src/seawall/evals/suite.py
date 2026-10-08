@@ -78,6 +78,7 @@ class SuiteResult:
             for trial in outcome.trials:
                 trial.run_dir = ""
                 trial.duration_seconds = trial.grade_seconds = 0.0
+                trial.trace.pop("time_ms", None)  # the counts are the same from run to run, the times are not
         return copy
 
     def save(self, path: Path, *, normalize: bool = False) -> None:
