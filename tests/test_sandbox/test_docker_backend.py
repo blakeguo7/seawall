@@ -185,7 +185,13 @@ def test_resource_limits_omitted_when_zero(monkeypatch):
         "seawall.sandbox.docker_backend.shutil.which",
         lambda name: "/usr/bin/docker",
     )
-    settings = Settings(sandbox=SandboxSettings(enabled=True, backend="docker"))
+    settings = Settings(
+        sandbox=SandboxSettings(
+            enabled=True,
+            backend="docker",
+            docker=DockerSandboxSettings(cpu_limit=0.0, memory_limit=""),
+        )
+    )
     session = DockerSandboxSession(settings=settings, session_id="abc", cwd=Path("/repo"))
 
     argv = session._build_run_argv()

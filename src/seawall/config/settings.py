@@ -189,8 +189,24 @@ class DockerSandboxSettings(BaseModel):
 
     image: str = "seawall-sandbox:latest"
     auto_build_image: bool = True
-    cpu_limit: float = 0.0
-    memory_limit: str = ""
+    cpu_limit: float = Field(default=2.0, ge=0, description="CPUs the container may use. 0 means no limit.")
+    memory_limit: str = Field(
+        default="4g",
+        description="Memory the container may use, as Docker writes it (512m, 4g). Swap is disabled. Empty means no limit.",
+    )
+    pids_limit: int = Field(
+        default=512, ge=0, description="Most processes the container may run at once, which stops a fork bomb. 0 means no limit."
+    )
+    cap_drop_all: bool = Field(default=True, description="Remove every Linux capability from the container.")
+    no_new_privileges: bool = Field(default=True, description="Stop a process in the container from gaining privileges (setuid binaries).")
+    read_only_root: bool = Field(
+        default=True,
+        description=(
+            "Mount the container's root filesystem read-only. The project directory, extra mounts and /tmp "
+            "stay writable, and HOME points at /tmp."
+        ),
+    )
+    tmp_size: str = Field(default="512m", description="Size of the writable /tmp, which is memory-backed and goes with the container.")
     extra_mounts: list[str] = Field(default_factory=list)
     extra_env: dict[str, str] = Field(default_factory=dict)
 

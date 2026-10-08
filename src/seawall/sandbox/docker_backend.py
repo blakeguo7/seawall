@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Mapping
 
 from seawall.config import Settings
 from seawall.platforms import get_platform, get_platform_capabilities
@@ -58,6 +60,21 @@ def get_docker_availability(settings: Settings) -> SandboxAvailability:
     return SandboxAvailability(enabled=True, available=True, command=docker)
 
 
+def _added_to_host_env(env: Mapping[str, str] | None) -> dict[str, str]:
+    """What a caller added to the host's environment, without the host's own.
+
+    Callers (hooks, background tasks, cron jobs) build the environment of a command as
+    ``{**os.environ, **extras}``. Copying all of that into the container would hand it the
+    host's API keys and tokens, and replace the container's own PATH and HOME with the host's.
+    A variable whose value is the host's own is left out; one the caller set or changed goes in.
+    The one case this gets wrong is a caller that sets a variable to the value the host already
+    has: the container then does not see it.
+    """
+    if not env:
+        return {}
+    return {key: value for key, value in env.items() if os.environ.get(key) != value}
+
+
 @dataclass
 class DockerSandboxSession:
     """Manages a long-running Docker container for one Seawall session."""
@@ -91,8 +108,13 @@ class DockerSandboxSession:
             "run",
             "-d",
             "--rm",
+            "--init",  # a real PID 1 that reaps the processes commands leave behind
             "--name",
             self._container_name,
+            "--label",
+            "seawall.sandbox=1",
+            "--label",
+            f"seawall.session={self.session_id}",
         ]
 
         # Docker backend currently supports only fully disabled networking.
@@ -110,7 +132,24 @@ class DockerSandboxSession:
         if docker_cfg.cpu_limit > 0:
             argv.extend(["--cpus", str(docker_cfg.cpu_limit)])
         if docker_cfg.memory_limit:
-            argv.extend(["--memory", docker_cfg.memory_limit])
+            # Swap equal to memory means no swap: a runaway command is killed instead of
+            # dragging the machine into swapping.
+            argv.extend(["--memory", docker_cfg.memory_limit, "--memory-swap", docker_cfg.memory_limit])
+        if docker_cfg.pids_limit > 0:
+            argv.extend(["--pids-limit", str(docker_cfg.pids_limit)])
+
+        # What the processes in the container may do
+        if docker_cfg.cap_drop_all:
+            argv.extend(["--cap-drop", "ALL"])
+        if docker_cfg.no_new_privileges:
+            argv.extend(["--security-opt", "no-new-privileges"])
+        environment = dict(docker_cfg.extra_env)
+        if docker_cfg.read_only_root:
+            # Options given to --tmpfs replace Docker's defaults, so say what is wanted: writable,
+            # no setuid binaries, no device nodes. Not noexec: build and test tools run from /tmp.
+            argv.extend(["--read-only", "--tmpfs", f"/tmp:rw,nosuid,nodev,size={docker_cfg.tmp_size}"])
+            # Tools that cache under HOME would otherwise fail on the read-only filesystem.
+            environment.setdefault("HOME", "/tmp")
 
         # Bind-mount project directory at the same path
         argv.extend(["-v", f"{cwd_str}:{cwd_str}"])
@@ -121,7 +160,7 @@ class DockerSandboxSession:
             argv.extend(["-v", mount])
 
         # Extra environment variables
-        for key, value in docker_cfg.extra_env.items():
+        for key, value in environment.items():
             argv.extend(["-e", f"{key}={value}"])
 
         argv.extend([docker_cfg.image, "tail", "-f", "/dev/null"])
@@ -217,9 +256,8 @@ class DockerSandboxSession:
         cmd: list[str] = [docker, "exec"]
         cmd.extend(["-w", str(Path(cwd).resolve())])
 
-        if env:
-            for key, value in env.items():
-                cmd.extend(["-e", f"{key}={value}"])
+        for key, value in _added_to_host_env(env).items():
+            cmd.extend(["-e", f"{key}={value}"])
 
         cmd.append(self._container_name)
         cmd.extend(argv)

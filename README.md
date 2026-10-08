@@ -108,7 +108,7 @@ The Python code is about 36,000 lines in 203 files, with about 22,000 lines of t
 
 Not implemented yet, in the order they are likely to be built:
 
-- A tighter Docker sandbox: no network by default, resource limits, a throwaway workspace per session. (The HTTP service refuses to start with the current Docker sandbox enabled, because it is one container per process; a per-session sandbox would lift that.)
+- A per-session Docker sandbox with a throwaway workspace. The container is already closed down (no network, CPU, memory and process limits, no capabilities, read-only root; see [docs/sandbox.md](docs/sandbox.md)), but it is one container per process, so the HTTP service still refuses to start with it enabled, and it mounts your real project directory read-write.
 
 ## Development
 
