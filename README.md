@@ -1,5 +1,7 @@
 # Seawall
 
+English | [简体中文](README.zh-CN.md)
+
 A compact coding-agent harness in Python. It has the parts a coding agent needs and a set of controls around them: the agent loop, a tool layer, permissions and hooks, approvals with a tamper-evident audit log, cost and run limits, an evaluation harness, an HTTP service, context compaction, memory, MCP, sub-agents, an optional sandbox and a terminal UI, all behind one `seawall` command.
 
 A seawall stands between a harbour and the sea. It does not calm the sea; it decides how far the water can reach. Approvals, limits, the audit log and interrupt do that for a coding agent: they bound what a bad step can do and leave a record of it. They are controls on what the agent does, not isolation from the machine it runs on; [docs/permissions-and-audit.md](docs/permissions-and-audit.md) says exactly what they do and do not guarantee.
